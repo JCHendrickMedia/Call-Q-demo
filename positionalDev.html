@@ -272,6 +272,7 @@
                 });
             },
             connect() {
+                console.log('connect() firing');
                 let socket = new SockJS('/websocket');
                 this.stompClient = Stomp.over(socket);
                 this.stompClient.connect({}, (frame) => {
