@@ -355,6 +355,18 @@
             padding-right: 1rem;
         }
     }
+    .marquee-banner-holder {
+        background:#ccc;
+        padding:0.5rem;
+        overflow: hidden;
+        bottom: 20px;
+        overflow: hidden;
+    }
+    .marquee-banner {
+        animation : slide 25s linear infinite;
+        font-size: 40px;
+        overflow: hidden;
+    }
 </style>
 <div class="grid-container" id="app">
     <div class="header border-grey">
@@ -369,9 +381,8 @@
     </div>
 
     <div class="footer">
-        <div>
-            <p class="item-1">Welcome to J&amp;C Hendrick Ltd</p>
-
+        <div class="holder">
+            <div class="marquee-banner">Welcome to J&amp;C Hendrick Ltd</div>
         </div>
     </div>
 </div>
