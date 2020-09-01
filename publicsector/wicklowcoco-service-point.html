@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>Service Point</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet">
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css"/>
+
+    <script src="https://unpkg.com/@babel/polyfill@latest/dist/polyfill.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex"></script>
+    <!--
+    //<script type="text/javascript" src="node_modules/vuejs/dist/vue.min.js"></script>
+    //<script type="text/javascript" src="node_modules/text-to-speech/dist/vue-text-to-speech.min.js"></script>
+    //<script type="text/javascript">Vue.use(VueTextToSpeech)</script>
+    --->
+
+</head>
+
+<style>
+    .grid-container {
+        color: green;
+        z-index: 999 !important;
+        opacity: 1 !important;
+        padding: 5px 5px 5px 5px;
+        height: 100%;
+        overflow: hidden;
+    }
+    .splash-grid-container {
+        color: yellow;
+        background-color: red;
+        z-index: 999 !important;
+        opacity: 1 !important;
+        padding: 5px 5px 5px 5px;
+        height: 100%;
+        overflow: hidden;
+    }
+    .imageBottomRight {
+        right: 0px;
+        bottom: 10px;
+        height: 110px;
+        width: 220px;
+        opacity:1;
+        position: absolute;
+        overflow: hidden;
+    }
+    .hugeFont {
+        font-size: 60px;
+        font-weight: bold;
+        overflow: hidden;
+    }
+
+    .ticketFont{
+        font-size: 300px;
+        font-weight: bold;
+        text-align: center;
+    }
+    .coloured {
+        background-color: red;
+        color: orange;
+        overflow: hidden;
+    }
+    .largeText{
+        font-size: 400px;
+        font-weight: bolder;
+        margin: -80px;
+        color: orange;
+        overflow: hidden;
+    }
+    .divLeft{
+        width: 20%;
+        padding: 0 0 0 5%;
+        overflow: hidden;
+    }
+    .divContent{
+        width: 40%;
+        padding: 0 5%;
+    }
+    .divRight{
+        width: 20%;
+        padding: 0 5% 0 0;
+        overflow: hidden;
+    }
+
+    div.vue-comp {
+        height: 50px;
+        width: 50px;
+        margin: 0 1rem;
+        background: #236192;
+        display: inline-block;
+        overflow: hidden;
+    }
+
+    .marquee-banner-holder {
+        background:#ccc;
+        padding:0.5rem;
+        overflow: hidden;
+        bottom: 20px;
+        overflow: hidden;
+    }
+    .marquee-banner {
+        animation : slide 25s linear infinite;
+        font-size: 40px;
+        overflow: hidden;
+    }
+
+    @keyframes slide {
+        0% {
+            transform: translatex(100%)
+        }
+
+        100% {
+            transform: translatex(0%)
+        }
+    }
+</style>
+<body>
+
+<audio id="notification-bell">
+    <source src="https://jch-web-media.s3-eu-west-1.amazonaws.com/bell.mp3"
+            muted="muted"
+            type="audio/mpeg">
+</audio>
+<div>
+    <div :class="!showSplash ? 'grid-container' : 'splash-grid-container'" id="app">
+        <div class="header">
+            <!--  <h1>Welcome to {{properties.clientName}}</h1>
+              <h1>{{branch.branchName}}</h1>
+            -->
+        </div>
+
+        <div v-if="selectedCallStationId == -1">
+            <h2>Welcome to {{properties.clientName}}</h2>
+            <h3>{{branch.branchName}}</h3>
+        </div>
+
+        <div v-if="selectedCallStationId != -1" class="container d-flex flex-column">
+            <div class="container d-flex flex-column" style="position: relative;">
+                <div class="divLeft"></div>
+                <div class="divContent">
+                    <div class="p-2 row justify-content-center align-self-center text-center mx-auto">
+                        <p id='ticketNumber' class="ticketFont">{{splashVisit.ticket}}</p>
+                    </div>
+                    <div class="p-2 row justify-content-center align-self-center text-center mx-auto">
+                        <p id='callStationName' class="hugeFont">{{callStation.name}}</p>
+                    </div>
+                </div>
+                <div class="divRight"></div>
+
+            </div>
+            <div class="container d-flex flex-column" >
+                <img v-if="selectedCallStationHasActiveSession == true" class="imageBottomRight" :src="this.branch.branchDefaultCounterOpenImage"/>
+                <img v-if="selectedCallStationHasActiveSession == false" class="imageBottomRight" :src="branch.branchDefaultCounterCloseImage"/>
+            </div>
+            <!--
+            <vue-text-to-speech>Hello</vue-text-to-speech>
+            --->
+            <!-- <div class="row justify-content-center align-self-center text-center mx-auto" v-if="showSplash">
+                       <p>Order Number: <br>{{splashVisit.parsedJson.notes}}</p>
+               </div>
+           --->
+
+        </div>
+        <div class="holder">
+            <div class="marquee-banner">{{callStation.bannerMessage}}</div>
+        </div>
+        <div class="footer">
+
+        </div>
+    </div>
+</div>
+<script>
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            selectedBranchId: null,
+            selectedCallStationId: null,
+
+            dev: false,
+            stompClient: null,
+            showSplash: false,
+            splashVisit: {},
+            branch: {branchName: 'loading....',
+                logicId: 'loading',
+                queues: [{name: "loading"}]},
+            callStation: {name: "loading"},
+            selectedCallStationHasActiveSession: false,
+            properties: [{clientName: 'loading'}],
+            timesFlashed: 0,
+            flashInterval: 1000,
+            splashTimeout: 20000,
+            timeoutValue: null,
+            callStationSessions: null,
+            audio: document.getElementById("bell"),
+
+        },
+        computed: {
+            timesToFlash: function () {
+                return this.splashTimeout / this.flashInterval;
+            },
+            baseUrl: function () {
+                let baseUrl = '';
+                if (window.location.hostname.indexOf('localhost') >= 0) {
+                    baseUrl = 'http://localhost:5000';
+                }
+                else {
+                    baseUrl = window.location.hostname;
+                }
+                return baseUrl;
+            },
+        }
+        ,
+        methods: {
+
+            getVisits() {
+                console.debug('called getVisits');
+                axios.get('/rest/media/branch/' + this.selectedBranchId + '/visits')
+                    .then(function (response) {
+                        this.visits = response.data;
+                        console.log('getVisits response:')
+                        console.log(response)
+                        //this.getBranch();
+                    });
+            },
+            playAudio() {
+                console.log('called playAudio');
+                document.getElementById('notification-bell').muted = false;
+                document.getElementById('notification-bell').play();
+                console.log("Bell called");
+            },
+            callEventForSelected(data) {
+                console.debug('called callEventForSelected input data:');
+                let visit = JSON.parse(data.body).visit;
+                this.splashVisit = visit;
+                this.playAudio();
+                clearTimeout(this.timeoutValue);
+                this.timesFlashed = 0
+                this.timeouts();
+            },
+            flashText() {
+                console.log('called flashText, the this.splashTimeout:' + this.splashTimeout);
+                this.showSplash = true;
+                document.getElementById('app').classList.toggle('coloured')
+                this.timesFlashed = ++this.timesFlashed;
+            },
+            timeouts() {
+                console.log('called timeouts');
+                this.flashText();
+                if (this.timesFlashed >= this.timesToFlash) {
+                    console.log('clearTimeout timeouts');
+                    clearTimeout(this.timeoutValue);
+                    document.getElementById('app').classList.toggle('coloured')
+                    document.getElementById('app').classList.remove('coloured')
+                    this.showSplash = false;
+                    this.timesFlashed = 0;
+                    return;
+                }
+                this.timeoutValue = setTimeout(this.timeouts, this.flashInterval)
+            },
+            async getBranch(selectedBranchId, baseUrl) {
+                console.debug('called getBranch' + selectedBranchId);
+                console.log('Current getBranch axios.defaults.baseURL:' + axios.defaults.baseURL);
+                axios.defaults.baseURL = baseUrl;
+                console.debug('axios.defaults.baseURL:' + this.baseUrl);
+                const response = await axios.get(
+                    '/rest/media/branch/' + selectedBranchId,
+                    {}
+                );
+                return response.data;
+            },
+            async getCallStation(selectedBranchId, selectedCallStationId, baseUrl) {
+                console.debug('called getBranch' + selectedBranchId);
+                axios.defaults.baseURL = baseUrl
+                const response = await axios.get(
+                    '/rest/media/branch/' + selectedBranchId + '/callStation/' + selectedCallStationId,
+                    {}
+                );
+                return response.data;
+            },
+            async checkIfCallStationOpen(selectedBranchId, selectedCallStationId, baseUrl) {
+                console.log('called checkIfCallStationOpen with branchLogicId:' + selectedBranchId + ' and selectedCallStationId:' + selectedCallStationId);
+                axios.defaults.baseURL = baseUrl
+                const response = await axios.get(
+                    '/rest/media/branch/' + selectedBranchId + '/callStation/' + selectedCallStationId + '/checkIfOpen',
+                    {}
+                );
+                console.log('got sessions');
+                console.log(response);
+                this.selectedCallStationHasActiveSession = response.data
+                return response.data;
+            },
+            connect() {
+                console.log('called connect');
+                let socket = new SockJS('/websocket');
+                this.stompClient = Stomp.over(socket);
+                this.stompClient.connect({}, (frame) => {
+                    console.log('Connected: ' + frame);
+
+                    this.stompClient.subscribe('/topic/callstation/' + app.selectedBranchId + '/callStation/' + app.selectedCallStationId, function (data) {
+                        window.location.reload(true);
+                    });
+
+                    this.stompClient.subscribe('/topic/session/' + app.selectedBranchId + '/callStation/' + app.selectedCallStationId, function (data) {
+                        //destination = "/topic/session/" + data.getBranchLogicId() + "/callStation/" + data.getCallstationLogicId();
+                        window.location.reload(true);
+                    });
+
+                    this.stompClient.subscribe('/topic/refresh', function (data) {
+                        window.location.reload(true);
+                    });
+
+                    this.stompClient.subscribe('/topic/call/' + app.selectedBranchId + '/callStation/' + app.selectedCallStationId, function (data) {
+                        app.callEventForSelected(data);
+                    });
+
+                }, () => {
+                    setTimeout(() => {
+                        this.connect();
+                    }, 2000);
+                });
+                this.stompClient.reconnect_delay = 5000;
+            },
+        },
+        created() {
+            console.log('called created');
+            const urlParams = new URLSearchParams(window.location.search);
+            console.log('read urlParam branchId:' + urlParams.get('branchId'));
+            console.log('read urlParam callStationId:' + urlParams.get('callStationId'));
+
+            this.selectedBranchId = urlParams.get('branchId');
+            this.selectedCallStationId = urlParams.get('callStationId');
+            console.log('set this.selectedBranchId:' + this.selectedBranchId);
+            console.log('set this.selectedCallStationId:' + this.selectedCallStationId);
+
+            if (window.location.hostname.indexOf('localhost') >= 0) {
+                this.dev = true;
+            }
+            if (this.dev) {
+                console.log('This is dev!');
+                axios.defaults.baseURL = 'http://localhost:5000';
+            }
+            else
+            {
+                axios.defaults.baseURL = 'https://'  + window.location.hostname
+            }
+            console.log('Current window.location.hostname:' + window.location.hostname);
+            console.log('Current axios.defaults.baseURL:' + axios.defaults.baseURL);
+
+            let callText = '/topic/call/' + this.selectedBranchId;
+            if (this.selectedBranchId == "" || this.selectedBranchId == null) {
+                callText = "/topic/call";
+                this.selectedBranchId = -1;
+                console.error("please set a branch ID!")
+            }
+            if (this.selectedCallStationId == null || this.selectedCallStationId == '') {
+                this.selectedCallStationId = -1;
+                console.error("please select a callStationId")
+            }
+
+            Promise.all([
+                this.getBranch(this.selectedBranchId, axios.defaults.baseURL),
+                this.getCallStation(this.selectedBranchId,this.selectedCallStationId, axios.defaults.baseURL)],
+                this.checkIfCallStationOpen(this.selectedBranchId, this.selectedCallStationId, axios.defaults.baseURL)
+            )
+                .then(res => {
+                    this.branch = res[0];
+                    console.log('Array of results[0]', res[0])
+                    this.callStation = res[1];
+                    console.log('Array of results[1]', res[1])
+                    console.log('Array of results[2]', res[2])
+                })
+                .catch(err => {
+                    console.error(err)
+                })
+
+
+
+            console.log('getting properties');
+            axios.get('/rest/properties')
+                .then(resp => {
+                    console.log('get /rest/properties')
+                    console.log(resp)
+                    let lcl_object = resp.data
+                    console.log(resp.data);
+                    this.properties = resp.data
+
+                    if ('callStation.flashInterval' in this.properties) {
+                        this.flashInterval = this.properties['callStation.flashInterval'];
+                        console.debug('get extra config from properties : found one');
+                    }
+                });
+            console.log('completed created');
+        },
+        mounted() {
+            console.log('called mounted');
+            //branchLogicId
+            //this.getBranch();
+            //console.log('getBranch branchName: ' + this.branch.branchName);
+            //console.log('called get Branch:');
+            //console.log(this);
+            //console.log(this.branch.logicId);
+
+            //console.log('called get CallStation');
+            //this.getCallStation();
+            //console.log('called checkIfCallStationOpen');
+
+
+            this.connect();
+        }
+    });
+</script>
+
+</body>
+</html>
