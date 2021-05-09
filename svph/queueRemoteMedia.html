@@ -196,6 +196,15 @@
         width: 90%;
     }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 
+   .imageBottom {
+        right: 20px;
+        bottom: 50px;
+        height: 40px;
+        width: 150px;
+        opacity:1;
+        position: absolute;
+        overflow: hidden;
+    }
     .imageBottomRight {
         right: 50px;
         bottom: 50px;
@@ -437,6 +446,9 @@
                     <!--  <p>Order Number: <br>{{lastCall.id}}</p> --->
                 </div>
 
+            </div>
+            <div id=jchLogo>
+                <img class="imageBottom" :src="branch.branchDefaultCounterOpenImage"/>
             </div>
             <div id=jchLogo>
                 <img class="imageBottomRight" :src="branch.branchDefaultCounterCloseImage"/>
