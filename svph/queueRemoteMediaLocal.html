@@ -1,1 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Media Display</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script>
+    <script src="/webjars/jquery/3.3.1-1/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<audio id="bell">
+    <source src="https://raw.githubusercontent.com/JCHendrickMedia/Call-Q-demo/master/Bell.mp3" type="audio/mpeg">
+</audio>
 
+<style>
+ 
+
+</style>
+<div class="grid-container" id="app">
+    <div class="splashScreen border-grey">
+        <div v-if="showSplash">
+            <p>Ticket Number: </p><br>
+            <p class="plarge">{{splashVisit.ticket}}</p>
+            <p class="lastCalledCallStation">{{splashVisit.callStation.name}}</p>
+            <!-- <p>Order Number: <br>{{splashVisit.parsedJson.notes}}</p> --->
+        </div>
+    </div>
+
+    <div class="main border-grey" v-if="!showSplash">
+        <div id='mainArea'>
+            <div v-for="queuePage in chunkedQueues[this.currentQueuePageShowing]" block style="padding: 15px; margin: 22px;">
+
+                <h1 class="waiting-grid-queue-name">{{queuePage.name}}</h1>
+                <div class="waiting-grid">
+                    <div v-for="(item, ind) in visits[queuePage.logicId]"
+                         v-if="ind<15">
+                        <p v-if="ind <= 2" class="plargenext">{{item.ticket}}</p>
+                        <p v-else class="plarge">{{item.ticket}}</p>
+                        <!--- <p>Order Number: <br>{{item.parsedJson.notes}}</p> --->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="right">
+        <div id='ticketListContainer'>
+            <h2 class="plarge">Last Called</h2>
+
+            <div id=lastCalledList>
+
+                <div class="border-grey" v-for="lastCall in lastCalled">
+                    <p>Ticket: </p><br>
+                    <p class="plarge">{{lastCall.ticket}}</p>
+                    <p class="lastCalledCallStation">{{lastCall.callStation.name}}</p>
+                    <!--  <p>Order Number: <br>{{lastCall.id}}</p> --->
+                </div>
+
+            </div>
+            <div id=jchLogo>
+                <img class="imageBottomRight" :src="branch.branchDefaultCounterCloseImage"/>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <div>
+            <p class="plarge">Highlighted Tickets will be called next</p>
+        </div>
+
+    </div>
+</div>
+<script>
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            clientName: 'Call-Q Demo',
+            stompClient: null,
+            visits: [],
+            lastCalled: [],
+            showSplash: false,
+            splashVisit: {},
+            selectedBranchId: -1,
+            branch: {branchName: "loading", queues: []},
+            allQueuesId: [],
+            currentQueuePageShowing: 0,
+            timeoutValue: null,
+            audio: document.getElementById("bell"),
+        },
+        computed: {
+            chunkedQueues () {
+                console.debug('called chunkedQueues');
+                let trimmedQueues = []
+                for (i = 0; i < this.branch.queues.length; i++) {
+                    console.debug(this.branch.queues[i].logicId)
+                    if (this.visits.hasOwnProperty(this.branch.queues[i].logicId)) {
+                        if (this.branch.queues[i].logicId != -1) {
+                            trimmedQueues.push(this.branch.queues[i])
+                        }
+                    }
+                }
+                return _.chunk(trimmedQueues, 3)
+            },
+            visitsToShow() {
+                let visits = this.visits;
+                if (this.currentQueueIdShowing === null) {
+                    return new Map();
+                } else {
+                    let map = new Map();
+                    map.set(this.currentQueueIdShowing, visits[this.currentQueueIdShowing]);
+                    return map;
+                }
+            },
+            processMap() {
+                let visitsToShow = this.visitsToShow;
+                return visitsToShow.get(this.currentQueueIdShowing);
+            },
+            totalVisitsForQueue() {
+                if (this.processMap === undefined)
+                    return 0;
+                return this.processMap.length;
+            }
+
+
+        },
+        methods: {
+            getVisits() {
+                console.debug('Called getVisits')
+                axios.get('/rest/media/branch/' + this.selectedBranchId + '/visits').then(e => {
+                    this.visits = e.data;
+                    this.getBranch();
+                });
+                console.debug('getVisits Visits')
+                console.debug(this.visits)
+            },
+            playAudio() {
+                console.log('Called playAudio')
+                "use strict";
+                if(this.audio.readyState === 4){
+                    this.audio.pause(); // first pause
+                    this.audio.currentTime = 0; // then reset
+                    this.audio.play(); // then play
+                    console.log("Bell called");
+                }
+
+            },
+            async containsObject(obj, list) {
+                console.debug('Called containsObject')
+                var i;
+                for (i = 0; i < list.length; i++) {
+                    console.debug('checking containsObject:' + i)
+                    if (list[i].id == obj.id) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            removeObject(cur_visit) {
+                console.debug('Called removeObject')
+                let i;
+                console.debug('LastCalled removeObject')
+
+                console.debug('this.lastCalled')
+                console.debug(this.lastCalled)
+
+                console.debug('this.visits[4]')
+                console.debug(this.visits[4])
+
+                let visit = JSON.parse(cur_visit).visit;
+                console.debug(visit.id)
+                console.debug(visit)
+
+                for (i = 0; i < this.lastCalled.length; i++) {
+                    console.debug('checking containsObject:' + i)
+                    console.debug(this.lastCalled[i].id)
+
+                    if (this.lastCalled[i].id == visit.id) {
+                        console.debug('About to removeObject')
+                        this.lastCalled.splice(i, 1);
+                        console.debug('Finished removeObject from LastCalled')
+                    }
+                }
+
+                cur_visit_queue_logid_id = visit.queuesLogicId
+                let j;
+                for (j = 0; j < this.visits[cur_visit_queue_logid_id].length; j++) {
+                    console.debug('checking containsObject:' + j)
+                    console.debug(this.visits[cur_visit_queue_logid_id][j].id)
+
+                    if (this.visits[cur_visit_queue_logid_id][j].id == visit.id) {
+                        console.debug('About to removeObject')
+                        this.visits[cur_visit_queue_logid_id].splice(j, 1);
+                        console.debug('Finished removeObject from Visits')
+                    }
+                }
+            },
+            call(cur_visit) {
+                console.debug('Called call')
+
+                let visit = JSON.parse(cur_visit).visit;
+                console.debug('lastCalled')
+                console.debug(this.lastCalled)
+
+                Promise.all([
+                    this.containsObject(visit, this.lastCalled)]
+                ).then(res => {
+                    let found = res[0];
+                    if (found) {
+                        console.debug('Called call was an echo!')
+                        this.splashVisit = visit;
+                        this.updateSplash();
+                        this.playAudio();
+                    }
+                    else {
+                        console.debug('Called call was not an echo!')
+                        this.splashVisit = visit;
+                        this.updateSplash();
+
+                        let data_obj = JSON.parse(cur_visit);
+                        if (data_obj['eventType'] != "VISIT_RECALL")
+                            console.debug('Pushing visit to lastCalled')
+                        this.lastCalled.push(visit);
+                        this.playAudio();
+                    }
+                })
+                    .catch(err => {
+                        console.error(err)
+                    })
+
+                //found = this.containsObject(this.lastCalled, visit);
+
+            },
+            add(data) {
+                console.debug('Called add')
+                this.getVisits();
+            },
+            stopSplash() {
+                console.debug('Called stopSplash')
+                this.showSplash = false;
+            },
+            updateSplash() {
+                console.debug('Called updateSplash')
+                this.showSplash = true;
+                setTimeout(this.stopSplash, 7000)
+            },
+            getBranch() {
+                console.debug('Called getBranch')
+                axios.get('/rest/media/branch/' + this.selectedBranchId).then(r => {
+                    this.branch = r.data;
+                    this.allQueuesId = Object.keys(this.visits);
+                    this.currentQueueIdShowing = this.allQueuesId[0];
+                });
+            },
+            getQueueName(queueId) {
+                console.debug('Called getQueueName')
+                if (queueId === 0)
+                    return '';
+
+                for (let i = 0; i < this.branch.queues.length; i++) {
+                    let queue = this.branch.queues[i];
+                    if (queue.logicId == queueId) {
+                        return queue.name;
+                    }
+                }
+                return '';
+            },
+            timeouts() {
+                let seconds = new Date().getTime() / 1000;
+                console.debug('Called timeouts timepoint:' + seconds)
+                this.cycleQueues();
+
+            },
+            cycleQueues() {
+                console.debug('Called cycleQueues currentQueuePageShowing:' + this.currentQueuePageShowing)
+                let curPage = this.currentQueuePageShowing;
+                let index = this.chunkedQueues.length - 1
+                if (index >= curPage + 1)
+                    this.currentQueuePageShowing = curPage + 1
+                else
+                    this.currentQueuePageShowing = 0
+                console.log('cycleQueues current Queue:' + this.currentQueuePageShowing);
+            },
+            connect() {
+                console.debug('Called connect')
+                var socket = new SockJS('/websocket');
+                this.stompClient = Stomp.over(socket);
+                this.stompClient.connect({}, (frame) => {
+                    console.log('Connected: ' + frame);
+
+                    this.stompClient.subscribe('/topic/refresh', function (data) {
+                        window.location.reload(true);
+                    });
+
+                    this.stompClient.subscribe('/topic/add', function (data) {
+                        app.add(data.body);
+                    });
+
+                    this.stompClient.subscribe('/topic/end', function (data) {
+                        app.removeObject(data.body);
+                    });
+
+                    this.stompClient.subscribe('/topic/call/' + this.selectedBranchId, function (data) {
+                        app.call(data.body);
+                    });
+
+
+                }, () => {
+                    setTimeout(() => {
+                        this.connect();
+                    }, 8000);
+                });
+                this.stompClient.reconnect_delay = 8000;
+            }
+        },
+        created() {
+
+            const urlParams = new URLSearchParams(window.location.search);
+            var branchLogicId = urlParams.get('branchId');
+
+            var callText = '/topic/call/' + branchLogicId;
+            if (branchLogicId == "" || branchLogicId == null) {
+                callText = "/topic/call";
+            }
+            this.selectedBranchId = branchLogicId;
+            console.log("subbing to " + callText);
+
+            this.getVisits();
+
+            this.connect();
+
+            setInterval(this.timeouts, 8000);
+        }
+    });
+
+</script>
+
+</body>
+</html>
