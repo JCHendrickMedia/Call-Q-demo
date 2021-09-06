@@ -426,15 +426,7 @@
 
     <div class="main border-grey" v-if="!showSplash">
         <div id='mainArea'>
-
-            <div data-my-radio-lang="en" class="embed-radioplayer js-radioplayerData" data-autoplay="true"
-                 data-stream="909" data-name="RTÉ Gold"
-                 data-logo="jpg" data-url="rte-gold"
-                 data-rid="224"><a href="https://irishradiolive.com/rte-gold"
-                                   target="_blank">RTÉ Gold</a></div>
-
-
-
+            
             <div v-for="queuePage in chunkedQueues[this.currentQueuePageShowing]" block style="padding: 15px; margin: 22px;">
 
                 <h1 class="waiting-grid-queue-name">{{queuePage.name}}</h1>
