@@ -169,46 +169,7 @@
         text-decoration: none;
         color: #000000;
     }
-    .button-style-wcc {
-        background: #6dbf58;
-        background-image: -webkit-linear-gradient(top, #6dbf58, #195909);
-        background-image: -moz-linear-gradient(top, #6dbf58, #195909);
-        background-image: -ms-linear-gradient(top, #6dbf58, #195909);
-        background-image: -o-linear-gradient(top, #6dbf58, #195909);
-        background-image: linear-gradient(to bottom, #6dbf58, #195909);
-        -webkit-border-radius: 20px;
-        -moz-border-radius: 20px;
-        border-radius: 20px;
-        color: #ffffff;
-        font-family: Open Sans;
-        font-size: 45px;
-        font-weight: 100;
-        padding: 50px;
-        box-shadow: 1px 1px 20px 0px #000000;
-        -webkit-box-shadow: 1px 1px 20px 0px #000000;
-        -moz-box-shadow: 1px 1px 20px 0px #000000;
-        text-shadow: 1px 1px 20px #000000;
-        border: solid #6dbf58 1px;
-        text-decoration: none;
-        display: inline-block;
-        cursor: pointer;
-        text-align: center;
-    }
 
-    .button-style-wcc:hover {
-        border: solid #337FED 1px;
-        background: #1E62D0;
-        background-image: -webkit-linear-gradient(top, #1E62D0, #3D94F6);
-        background-image: -moz-linear-gradient(top, #1E62D0, #3D94F6);
-        background-image: -ms-linear-gradient(top, #1E62D0, #3D94F6);
-        background-image: -o-linear-gradient(top, #1E62D0, #3D94F6);
-        background-image: linear-gradient(to bottom, #1E62D0, #3D94F6);
-        -webkit-border-radius: 20px;
-        -moz-border-radius: 20px;
-        border-radius: 20px;
-        text-decoration: none;
-        color: #000000;
-    }
 </style>
 
 
@@ -243,7 +204,7 @@
             <div class="flexcontainer">
                 <div class="card-deck" v-for="chunk in chunkedQueues">
                     <div v-for="queueItem in chunk" block style="padding: 15px; margin: 22px;">
-                        <b-button class="button-style-brca" size="lg" block style="padding: 15px; margin: 22px;"
+                        <b-button class="rounded-circle" 
                                   @click='setSelectedQueue(queueItem.name, queueItem.logicId)'>Press here for ticket
                         </b-button>
                     </div>
