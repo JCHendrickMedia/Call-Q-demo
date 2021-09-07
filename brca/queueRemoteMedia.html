@@ -424,10 +424,7 @@
     }
 </style>
 <div class="grid-container" id="app">
-    <div class="HeaderScreen">
-        <p class="plarge">Blackrock Clinic Outpatient Department</p>
-        <p class="plarge">Thank you for your patience, the following tickets will be called soon</p>
-    </div>
+
     <div class="splashScreen border-grey">
         
 
@@ -441,6 +438,10 @@
     </div>
 
     <div class="main border-grey" v-if="!showSplash">
+            <div class="HeaderScreen">
+        <p class="plarge">Blackrock Clinic Outpatient Department</p>
+        <p class="plarge">Thank you for your patience, the following tickets will be called soon</p>
+    </div>
         <div id='mainArea'>
             
             <div v-for="queuePage in chunkedQueues[this.currentQueuePageShowing]" block style="padding: 15px; margin: 22px;">
