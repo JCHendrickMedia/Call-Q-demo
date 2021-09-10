@@ -204,6 +204,8 @@
             <div class="flexcontainer">
                 <div class="card-deck" v-for="chunk in chunkedQueues">
                     <div v-for="queueItem in chunk" block style="padding: 15px; margin: 22px;">
+                        <p class="h1-lrg-footer">Once you take a ticket, please take a seat and your number 
+will be called on screen for registration.</p>
                         <b-button class="rounded-circle" 
                                   @click='setSelectedQueue(queueItem.name, queueItem.logicId)'>Press here for ticket
                         </b-button>
@@ -212,8 +214,7 @@
                 </div>
             </div>
             <footer v-if="!showPrinterOutOfPaper">
-                <p class="h1-lrg-footer">Once you take a ticket, please take a seat and your number 
-will be called on screen for registration.</p>
+                
             </footer>
         </div>
         <div class=" container d-flex " v-if="showCustomer">
