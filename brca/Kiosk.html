@@ -277,9 +277,9 @@
 
                     <div v-for="queueItem in chunk" block style="padding: 190px; margin: 22px;">
 
-                        <b-button class="btnCircle" size="lg"
-                                  @click='setSelectedQueue(queueItem.name, queueItem.logicId)'>Press here for ticket.
-                        </b-button>
+                        <input class="btnCircle" size="lg"
+                                  @click.once='setSelectedQueue(queueItem.name, queueItem.logicId)'>Press here for ticket
+                        </input>
                     </div>
 
 
@@ -315,10 +315,10 @@
                     <input type="text" class="form-control" v-model="customer.orderNum">
                 </div>
 
-                <input class="col-lg-9 ml-auto mr-auto button-text btn-div button-style" size="lg" block
+                <b-button class="col-lg-9 ml-auto mr-auto button-text btn-div button-style" size="lg" block
                           style="padding: 0px 0; "
-                          @click.once='createVisit()'>Create Visit
-                </input>
+                          @click='createVisit()'>Create Visit
+                </b-button>
 
                 <b-button class="col-lg-9 ml-auto mr-auto button-text btn-div button-style" size="lg" block style="margin: 30px;"
                           @click='goHome()'>Home
